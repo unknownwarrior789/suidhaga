@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login | Sui Dhaga</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f7f4ef;
+}
+.login-box {
+  background: #fff;
+  padding: 60px;
+  width: 400px;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  text-align: center;
+}
+.login-box h1 {
+  font-family: 'Playfair Display', serif;
+  margin-bottom: 30px;
+}
+.login-box input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+  font-size: 14px;
+  transition: border-color 0.3s;
+  text-align: left;
+}
+.login-box input:focus {
+  outline: none;
+  border-color: #7b1e1e;
+  box-shadow: 0 0 0 3px rgba(123,30,30,0.1);
+}
+.login-box button {
+  width: 100%;
+  padding: 14px;
+  background: #7b1e1e;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  transition: 0.3s;
+  border-radius: 6px;
+}
+.login-box button:hover { background: #f3c97a; color: #102542; }
+.login-box button:disabled { background: #ccc; cursor: not-allowed; color: #fff; }
+.msg {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  text-align: left;
+  display: none;
+}
+.msg.error   { background: #fff0f0; border-left: 4px solid #c0392b; color: #c0392b; display: block; }
+.msg.success { background: #f0fff4; border-left: 4px solid #27ae60; color: #27ae60; display: block; }
+.msg.loading { background: #fff8e1; border-left: 4px solid #f3c97a; color: #7a6000; display: block; }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">SUI DHAGA</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="couture.html">Couture</a>
+    <a href="stitch.html">Customise</a>
+    <a href="designers.html">Designers</a>
+    <a href="profile.html">Profile</a>
+    <a href="login.html">Login</a>
+  </nav>
+</header>
+
+<div class="login-wrapper">
+  <div class="login-box">
+    <h1>Login</h1>
+    <div class="msg" id="statusMsg"></div>
+    <input type="text"     id="usernameInput" placeholder="Username"  autocomplete="username">
+    <input type="password" id="passwordInput" placeholder="Password"  autocomplete="current-password">
+    <button id="loginBtn" onclick="handleLogin()">Login</button>
+    <p style="margin-top:15px;font-size:14px;">
+      Don't have an account?
+      <a href="signup.html" style="color:#7b1e1e;font-weight:500;">Sign up</a>
+    </p>
+  </div>
+</div>
+
+<!-- Firebase Compat CDN (works with file://, no server needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // ── Firebase init ──────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCV260rVvKEKN41bfX-IdLdpVju_LUJxQM",
+    authDomain:        "suidhaga-67554.firebaseapp.com",
+    projectId:         "suidhaga-67554",
+    storageBucket:     "suidhaga-67554.firebasestorage.app",
+    messagingSenderId: "646624824611",
+    appId:             "1:646624824611:web:a57f52532604b5ed4bd096"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
+
+  // ── Session helpers ────────────────────────────────────────
+  function setSession(username, role) {
+    sessionStorage.setItem("sd_user", username);
+    // Normalize: anything that isn't "designer" is "customer"
+    sessionStorage.setItem("sd_role", role === "designer" ? "designer" : "customer");
+  }
+
+  // ── Login handler ──────────────────────────────────────────
+  async function handleLogin() {
+    const username = document.getElementById("usernameInput").value.trim();
+    const password = document.getElementById("passwordInput").value;
+    const btn      = document.getElementById("loginBtn");
+    const msg      = document.getElementById("statusMsg");
+
+    msg.className   = "msg";
+    msg.textContent = "";
+
+    if (!username || !password) {
+      msg.className   = "msg error";
+      msg.textContent = "Please enter your username and password.";
+      return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = "Logging in…";
+    msg.className   = "msg loading";
+    msg.textContent = "Verifying credentials…";
+
+    try {
+      // Try direct doc lookup first (username is the doc ID)
+      const docSnap = await db.collection("users").doc(username).get();
+
+      let userData = null;
+
+      if (docSnap.exists) {
+        userData = docSnap.data();
+      } else {
+        // Fallback: query by username field
+        const snap = await db.collection("users").where("username", "==", username).get();
+        if (!snap.empty) {
+          userData = snap.docs[0].data();
+        }
+      }
+
+      if (!userData) {
+        msg.className   = "msg error";
+        msg.textContent = "Incorrect username or password.";
+        btn.disabled    = false;
+        btn.textContent = "Login";
+        return;
+      }
+
+      if (userData.password !== password) {
+        msg.className   = "msg error";
+        msg.textContent = "Incorrect username or password.";
+        btn.disabled    = false;
+        btn.textContent = "Login";
+        return;
+      }
+
+      // Success
+      const role = userData.role || "customer";
+      setSession(username, role);
+
+      msg.className   = "msg success";
+      msg.textContent = "Welcome back! Redirecting…";
+
+      setTimeout(function () {
+        if (role === "designer") {
+          window.location.href = "designer_dashboard.html";
+        } else {
+          window.location.href = "profile.html";
+        }
+      }, 1200);
+
+    } catch (err) {
+      console.error("Login error:", err);
+      msg.className   = "msg error";
+      msg.textContent = "Something went wrong: " + (err.message || err);
+      btn.disabled    = false;
+      btn.textContent = "Login";
+    }
+  }
+
+  // Allow pressing Enter to submit
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") handleLogin();
+  });
+</script>
+
+</body>
+</html>

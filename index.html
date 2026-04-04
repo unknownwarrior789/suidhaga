@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Sui Dhaga | Bespoke Menswear</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="navbar">
+    <div class="logo">SUI DHAGA</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="couture.html">Couture</a>
+      <a href="stitch.html">Customise</a>
+      <a href="designers.html">Designers</a>
+      <a href="profile.html">Profile</a>
+      <a href="login.html" id="navAuthLink">Login</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Indian Menswear<br>Crafted to Measure</h1>
+      <p>Bespoke sherwanis, kurtas and couture garments, tailored exclusively to your measurements and vision.</p>
+      <a href="stitch.html">
+        <button>Begin Customisation</button>
+      </a>
+    </div>
+    <div class="hero-image"></div>
+  </section>
+
+  <section class="collection">
+    <h2>Men's Couture Collection</h2>
+    <div class="collection-grid">
+      <div class="collection-card">
+        <img src="images/sherwani.jpg" alt="Wedding Sherwanis">
+        <h3>Wedding Sherwanis</h3>
+      </div>
+      <div class="collection-card">
+        <img src="images/indo.jpg" alt="Indo-Western">
+        <h3>Indo-Western</h3>
+      </div>
+      <div class="collection-card">
+        <img src="images/kurta.jpg" alt="Classic Kurtas">
+        <h3>Classic Kurtas</h3>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Sui Dhaga. All Rights Reserved.</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
+  <script>
+    // Update nav link: show Logout if logged in, Login if not
+    const link = document.getElementById("navAuthLink");
+    const user = window.getSessionUser();
+
+    if (user) {
+      link.textContent = "Logout";
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.clearSession();
+        window.location.reload();
+      });
+    } else {
+      link.textContent = "Login";
+      link.href = "login.html";
+    }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Seed Designers | Sui Dhaga Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@1,400;0,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --maroon: #7b1e1e;
+    --gold: #c9a55a;
+    --bg: #f5f0e8;
+    --surface: #ffffff;
+    --border: rgba(28,25,22,0.10);
+    --text: #2e2a24;
+    --muted: #7a7368;
+    --sans: 'DM Sans', sans-serif;
+    --serif: 'Cormorant Garamond', serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding: 40px 24px; }
+  .container { max-width: 780px; margin: 0 auto; }
+  h1 { font-family: var(--serif); font-size: 34px; font-style: italic; color: var(--maroon); margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
+  .card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); padding: 28px 32px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  .designer-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: 10px; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .designer-row:last-child { border-bottom: none; }
+  .designer-row .d-name { font-weight: 600; }
+  .designer-row .d-user { font-family: monospace; font-size: 12px; color: var(--muted); }
+  .designer-row .d-pass { font-family: monospace; font-size: 12px; color: #2e7d32; }
+  .status-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #e0d8c8; flex-shrink: 0;
+  }
+  .status-dot.done { background: #4caf7d; }
+  .status-dot.error { background: #c0392b; }
+  .status-dot.skip { background: #f3c97a; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px; border-radius: 10px; border: none;
+    font-family: var(--sans); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--maroon); color: white; }
+  .btn-primary:hover { background: #9a2626; }
+  .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+  .log-box {
+    background: #1a1a1a; border-radius: 10px;
+    padding: 20px; font-family: monospace; font-size: 12px;
+    color: #e0e0e0; min-height: 120px; line-height: 1.8;
+    white-space: pre-wrap; max-height: 320px; overflow-y: auto;
+  }
+  .log-box .ok  { color: #4caf7d; }
+  .log-box .err { color: #ef5350; }
+  .log-box .inf { color: #90caf9; }
+  .log-box .skp { color: #f3c97a; }
+  .summary {
+    margin-top: 18px; padding: 16px 20px;
+    border-radius: 10px; font-size: 13px; display: none;
+  }
+  .summary.success { background: #f0fff4; border: 1px solid #4caf7d; color: #2e7d32; }
+  .summary.partial { background: #fff8e1; border: 1px solid #f3c97a; color: #7a6000; }
+  .header-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: 10px; padding: 8px 0 6px;
+    border-bottom: 2px solid var(--border);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--muted); font-weight: 500;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Designer Account Seeder</h1>
+  <p class="subtitle">
+    This admin tool creates all designer accounts in Firestore (users + designers collections) and seeds their credentials.<br>
+    <strong>Run this only once.</strong> Existing accounts will be skipped automatically.
+  </p>
+
+  <div class="card">
+    <h2>Designer Accounts to be Created</h2>
+    <div class="header-row">
+      <span>Designer Name</span>
+      <span>Username</span>
+      <span>Password</span>
+      <span>Specialty</span>
+      <span>Status</span>
+    </div>
+    <div id="designerList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Actions</h2>
+    <button class="btn btn-primary" id="seedBtn" onclick="runSeed()">
+      <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><path d="M7.5 1v13M1 7.5h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Seed All Designer Accounts
+    </button>
+
+    <div style="height:20px;"></div>
+
+    <div class="log-box" id="logBox"><span class="inf">Ready. Click "Seed All" to begin…</span></div>
+    <div class="summary" id="summary"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where }
+  from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyCV260rVvKEKN41bfX-IdLdpVju_LUJxQM",
+  authDomain:        "suidhaga-67554.firebaseapp.com",
+  projectId:         "suidhaga-67554",
+  storageBucket:     "suidhaga-67554.firebasestorage.app",
+  messagingSenderId: "646624824611",
+  appId:             "1:646624824611:web:a57f52532604b5ed4bd096"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── DESIGNER MASTER DATA ────────────────────────────────────────────────────
+// username is derived from name: lowercase, spaces → underscores
+const DESIGNERS = [
+  {
+    name:         "Manyavar",
+    username:     "manyavar",
+    password:     "Manyavar@2026",
+    email:        "manyavar@suidhaga.in",
+    displayName:  "Manyavar Studios",
+    specialty:    "Ethnic & festive wear",
+    location:     "Pan India",
+    category:     "10k-30k",
+    price:        12000,
+    rating:       4.0,
+    experience:   15
+  },
+  {
+    name:         "Anita Dongre",
+    username:     "anita_dongre",
+    password:     "AnitaDongre@2026",
+    email:        "anita.dongre@suidhaga.in",
+    displayName:  "Anita Dongre Atelier",
+    specialty:    "Contemporary Indian fusion",
+    location:     "Mumbai",
+    category:     "10k-30k",
+    price:        15000,
+    rating:       4.2,
+    experience:   22
+  },
+  {
+    name:         "Sarah & Sandeep",
+    username:     "sarah_sandeep",
+    password:     "SarahSandeep@2026",
+    email:        "sarah.sandeep@suidhaga.in",
+    displayName:  "Sarah & Sandeep Studio",
+    specialty:    "Contemporary bespoke",
+    location:     "Delhi",
+    category:     "10k-30k",
+    price:        18000,
+    rating:       3.8,
+    experience:   8
+  },
+  {
+    name:         "Raymond Ethnix",
+    username:     "raymond_ethnix",
+    password:     "RaymondEthnix@2026",
+    email:        "raymond.ethnix@suidhaga.in",
+    displayName:  "Raymond Ethnix",
+    specialty:    "Classic tailored formals",
+    location:     "Pan India",
+    category:     "10k-30k",
+    price:        10000,
+    rating:       3.9,
+    experience:   20
+  },
+  {
+    name:         "Independent Bespoke Studios",
+    username:     "independent_bespoke",
+    password:     "IndepBespoke@2026",
+    email:        "independent.bespoke@suidhaga.in",
+    displayName:  "Independent Bespoke Studios",
+    specialty:    "Bespoke tailoring",
+    location:     "Bangalore",
+    category:     "10k-30k",
+    price:        15000,
+    rating:       3.5,
+    experience:   6
+  },
+  {
+    name:         "Sabyasachi Menswear",
+    username:     "sabyasachi_menswear",
+    password:     "SabyMenswear@2026",
+    email:        "sabyasachi.menswear@suidhaga.in",
+    displayName:  "Sabyasachi Menswear",
+    specialty:    "Luxury couture & bridal",
+    location:     "Kolkata",
+    category:     "30k-70k",
+    price:        45000,
+    rating:       5.0,
+    experience:   18
+  },
+  {
+    name:         "Rahul Mishra",
+    username:     "rahul_mishra",
+    password:     "RahulMishra@2026",
+    email:        "rahul.mishra@suidhaga.in",
+    displayName:  "Rahul Mishra Atelier",
+    specialty:    "Hand-embroidered artisan wear",
+    location:     "Delhi",
+    category:     "30k-70k",
+    price:        40000,
+    rating:       4.8,
+    experience:   16
+  },
+  {
+    name:         "Abhishek Gupta",
+    username:     "abhishek_gupta",
+    password:     "AbhishekGupta@2026",
+    email:        "abhishek.gupta@suidhaga.in",
+    displayName:  "Abhishek Gupta Studio",
+    specialty:    "Indo-western silhouettes",
+    location:     "Mumbai",
+    category:     "30k-70k",
+    price:        35000,
+    rating:       4.5,
+    experience:   12
+  }
+];
+
+// Render the table
+function renderTable() {
+  const list = document.getElementById('designerList');
+  list.innerHTML = DESIGNERS.map((d, i) => `
+    <div class="designer-row">
+      <span class="d-name">${d.name}</span>
+      <span class="d-user">${d.username}</span>
+      <span class="d-pass">${d.password}</span>
+      <span style="font-size:12px;color:#7a7368;">${d.specialty}</span>
+      <div class="status-dot" id="dot-${i}" title="Pending"></div>
+    </div>
+  `).join('');
+}
+renderTable();
+
+function log(html) {
+  const box = document.getElementById('logBox');
+  box.innerHTML += '\n' + html;
+  box.scrollTop = box.scrollHeight;
+}
+
+window.runSeed = async function() {
+  const btn = document.getElementById('seedBtn');
+  btn.disabled = true;
+  btn.textContent = 'Seeding…';
+  document.getElementById('logBox').innerHTML = '';
+
+  let created = 0, skipped = 0, errors = 0;
+
+  for (let i = 0; i < DESIGNERS.length; i++) {
+    const d = DESIGNERS[i];
+    const dot = document.getElementById('dot-' + i);
+    log(`<span class="inf">→ Processing: ${d.name} (${d.username})…</span>`);
+
+    try {
+      // ── 1. Check & create users/{username} doc ──
+      const userRef  = doc(db, 'users', d.username);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        log(`<span class="skp">  ✦ User "${d.username}" already exists — skipping user doc.</span>`);
+        dot.className = 'status-dot skip';
+        skipped++;
+      } else {
+        await setDoc(userRef, {
+          username:    d.username,
+          name:        d.displayName,
+          email:       d.email,
+          password:    d.password,
+          role:        'designer',
+          designerName: d.name,   // maps to the display name used in orders/chats
+          specialty:   d.specialty,
+          location:    d.location,
+          createdAt:   new Date().toISOString()
+        });
+        log(`<span class="ok">  ✓ User doc created: users/${d.username}</span>`);
+      }
+
+      // ── 2. Check & create designers/{username} doc ──
+      const dRef  = doc(db, 'designers', d.username);
+      const dSnap = await getDoc(dRef);
+
+      if (dSnap.exists()) {
+        log(`<span class="skp">  ✦ Designer doc "${d.username}" already exists — skipping designers doc.</span>`);
+      } else {
+        await setDoc(dRef, {
+          username:    d.username,
+          name:        d.name,
+          displayName: d.displayName,
+          specialty:   d.specialty,
+          location:    d.location,
+          category:    d.category,
+          price:       d.price,
+          rating:      d.rating,
+          experience:  d.experience,
+          available:   true,
+          createdAt:   new Date().toISOString()
+        });
+        log(`<span class="ok">  ✓ Designer doc created: designers/${d.username}</span>`);
+      }
+
+      if (!userSnap.exists()) {
+        dot.className = 'status-dot done';
+        created++;
+      }
+
+    } catch (err) {
+      log(`<span class="err">  ✗ Error for ${d.name}: ${err.message}</span>`);
+      document.getElementById('dot-' + i).className = 'status-dot error';
+      errors++;
+    }
+  }
+
+  log(`\n<span class="inf">─────────────────────────────</span>`);
+  log(`<span class="inf">Done! Created: ${created}  |  Skipped: ${skipped}  |  Errors: ${errors}</span>`);
+
+  const summary = document.getElementById('summary');
+  summary.style.display = 'block';
+  if (errors === 0) {
+    summary.className = 'summary success';
+    summary.textContent = `✓ All designer accounts are ready. ${created} created, ${skipped} already existed. Designers can now log in — and customers can start chats that are linked to their real accounts.`;
+  } else {
+    summary.className = 'summary partial';
+    summary.textContent = `⚠ Seeding completed with ${errors} error(s). Check the log above. Please retry for failed entries.`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Re-run Seed';
+};
+</script>
+</body>
+</html>

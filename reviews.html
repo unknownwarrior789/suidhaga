@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customer Reviews | Sui Dhaga</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<style>
+.review-wrapper {
+  max-width: 900px;
+  margin: 120px auto;
+  background: #fff;
+  padding: 50px;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.review-wrapper h1 {
+  font-family: 'Playfair Display', serif;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-form label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.review-form select,
+.review-form textarea {
+  padding: 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  width: 100%;
+}
+
+.review-form textarea {
+  height: 120px;
+  resize: none;
+}
+
+.review-form button {
+  background: #7b1e1e;
+  color: white;
+  border: none;
+  padding: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.review-form button:hover {
+  background: #f3c97a;
+  color: #102542;
+}
+
+/* ⭐ STAR RATING */
+.star-rating {
+  display: flex;
+  gap: 8px;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+.star-rating span {
+  color: #ccc;
+  transition: 0.2s;
+}
+
+.star-rating span.active {
+  color: #f3c97a;
+}
+
+.back-btn {
+  margin-top: 20px;
+  display: inline-block;
+  text-decoration: none;
+  color: #7b1e1e;
+  font-weight: 500;
+}
+
+.success-msg {
+  display: none;
+  background: #e8f5e9;
+  border-left: 4px solid #4caf50;
+  padding: 14px;
+  border-radius: 6px;
+  color: #2e7d32;
+}
+</style>
+</head>
+
+<body>
+
+<header class="navbar">
+  <div class="logo">SUI DHAGA</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="couture.html">Couture</a>
+    <a href="stitch.html">Customise</a>
+    <a href="designers.html">Designers</a>
+    <a href="profile.html">Profile</a>
+    <a href="login.html">Logout</a>
+  </nav>
+</header>
+
+<section class="review-wrapper">
+  <h1>Give Review to Designer</h1>
+
+  <div class="success-msg" id="successMsg">
+    ✅ Review submitted successfully!
+  </div>
+
+  <form class="review-form" onsubmit="submitReview(event)">
+
+    <label>Select Designer</label>
+    <select name="designer" required>
+      <option value="">Choose Designer</option>
+      <option>Manyavar</option>
+      <option>Anita Dongre</option>
+      <option>Sabyasachi</option>
+      <option>Manish Malhotra</option>
+    </select>
+
+    <label>Rating</label>
+    <div class="star-rating" id="starRating">
+      <span data-value="1">★</span>
+      <span data-value="2">★</span>
+      <span data-value="3">★</span>
+      <span data-value="4">★</span>
+      <span data-value="5">★</span>
+    </div>
+    <input type="hidden" id="ratingValue" required>
+
+    <label>Your Review</label>
+    <textarea placeholder="Write your experience..." required></textarea>
+
+    <button type="submit">Post Review</button>
+  </form>
+
+  <a class="back-btn" href="profile.html">← Back to Dashboard</a>
+</section>
+
+<script>
+const stars = document.querySelectorAll("#starRating span");
+const ratingInput = document.getElementById("ratingValue");
+
+stars.forEach((star, index) => {
+  star.addEventListener("click", () => {
+    let rating = index + 1;
+    ratingInput.value = rating;
+
+    stars.forEach((s, i) => {
+      s.classList.toggle("active", i < rating);
+    });
+  });
+});
+
+function submitReview(e) {
+  e.preventDefault();
+
+  if (!ratingInput.value) {
+    alert("Please select a rating!");
+    return;
+  }
+
+  document.getElementById("successMsg").style.display = "block";
+
+  e.target.reset();
+  stars.forEach(s => s.classList.remove("active"));
+
+  setTimeout(() => {
+    window.location.href = "profile.html";
+  }, 2000);
+}
+</script>
+
+</body>
+</html>

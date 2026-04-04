@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Enter Measurements | Sui Dhaga</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+nav a { display: inline-block; }
+.measure-wrapper {
+  max-width: 1000px;
+  margin: 120px auto;
+  background: #fff;
+  padding: 60px;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+}
+.measure-wrapper h1 {
+  font-family: 'Playfair Display', serif;
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 42px;
+}
+.help-text { text-align: center; font-size: 14px; color: #666; margin-bottom: 30px; }
+.measure-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+.measure-group { display: flex; flex-direction: column; }
+.measure-group small { font-size: 12px; color: #888; margin-top: 5px; }
+.measure-grid input {
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  transition: 0.3s;
+}
+.measure-grid input:focus {
+  outline: none;
+  border-color: #7b1e1e;
+  box-shadow: 0 0 0 3px rgba(123,30,30,0.12);
+}
+.info-box {
+  background: #f7f4ef;
+  padding: 25px;
+  border-left: 4px solid #7b1e1e;
+  margin-bottom: 40px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+.measure-wrapper button {
+  margin-top: 40px;
+  width: 100%;
+  padding: 16px;
+  background: #7b1e1e;
+  color: white;
+  border: none;
+  font-size: 15px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: 0.3s;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+}
+.measure-wrapper button:hover { background: #f3c97a; color: #102542; }
+.measure-wrapper button:disabled { background: #ccc; cursor: not-allowed; color: #fff; }
+.msg {
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 30px;
+  display: none;
+}
+.msg.error   { background: #fff0f0; border-left: 4px solid #c0392b; color: #c0392b; display: block; }
+.msg.success { background: #f0fff4; border-left: 4px solid #27ae60; color: #27ae60; display: block; }
+.msg.loading { background: #fff8e1; border-left: 4px solid #f3c97a; color: #7a6000; display: block; }
+@media (max-width: 900px) { .measure-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">SUI DHAGA</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="couture.html">Couture</a>
+    <a href="stitch.html">Customise</a>
+    <a href="designers.html">Designers</a>
+    <a href="profile.html">Profile</a>
+    <a href="login.html">Logout</a>
+  </nav>
+</header>
+
+<section class="measure-wrapper">
+  <h1>Enter Your Measurements</h1>
+  <p class="help-text">All measurements must be in <strong>inches</strong>.</p>
+
+  <div class="msg" id="statusMsg"></div>
+
+  <div class="info-box">
+    <strong>How to measure:</strong><br>
+    • Chest: Wrap tape around fullest part of chest<br>
+    • Waist: Measure around natural waist (above navel)<br>
+    • Hips: Measure around widest part<br>
+    • Shoulder: Tip to tip<br>
+    • Sleeve: Shoulder to wrist<br>
+    • Length: Shoulder to desired length<br>
+    • Neck: Around base of neck<br>
+    • Arm Hole: Around arm joint
+  </div>
+
+  <div class="measure-grid">
+    <div class="measure-group">
+      <input type="number" id="chest" step="0.1" min="30" max="60" placeholder="Chest (in inches)" required>
+      <small>Range: 30–60 inches</small>
+    </div>
+    <div class="measure-group">
+      <input type="number" id="waist" step="0.1" min="24" max="52" placeholder="Waist (in inches)" required>
+      <small>Range: 24–52 inches</small>
+    </div>
+    <div class="measure-group">
+      <input type="number" id="hips" step="0.1" min="30" max="60" placeholder="Hips (in inches)" required>
+      <small>Range: 30–60 inches</small>
+    </div>
+    <div class="measure-group">
+      <input type="number" id="shoulder" step="0.1" min="14" max="24" placeholder="Shoulder Width (in inches)" required>
+      <small>Range: 14–24 inches</small>
+    </div>
+    <div class="measure-group">
+      <input type="number" id="sleeve" step="0.1" min="18" max="30" placeholder="Sleeve Length (in inches)" required>
+      <small>Range: 18–30 inches</small>
+    </div>
+    <div class="measure-group">
+      <input type="number" id="length" step="0.1" min="30" max="50" placeholder="Kurta Length (in inches)" required>
+      <small>Range: 30–50 inches</small>
+    </div>
+    <div class="measure-group">
+      <input type="number" id="neck" step="0.1" min="13" max="20" placeholder="Neck Size (in inches)" required>
+      <small>Range: 13–20 inches</small>
+    </div>
+    <div class="measure-group">
+      <input type="number" id="arm" step="0.1" min="12" max="25" placeholder="Arm Hole (in inches)" required>
+      <small>Range: 12–25 inches</small>
+    </div>
+  </div>
+
+  <button id="saveBtn" onclick="handleSave()">Save Measurements</button>
+</section>
+
+<footer>
+  <p>© 2026 Sui Dhaga. All Rights Reserved.</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script>
+  // Redirect if not logged in
+  const username = window.getSessionUser();
+  if (!username) {
+    window.location.href = "login.html";
+  }
+
+  // Pre-fill existing measurements if saved
+  async function prefill() {
+    const data = await window.getMeasurements(username);
+
+    if (!data) return;
+    const fields = ["chest","waist","hips","shoulder","sleeve","length","neck","arm"];
+    fields.forEach(f => {
+      if (data[f]) document.getElementById(f).value = data[f];
+    });
+  }
+  prefill();
+
+  window.handleSave = async function () {
+    const fields = ["chest","waist","hips","shoulder","sleeve","length","neck","arm"];
+    const btn    = document.getElementById("saveBtn");
+    const msg    = document.getElementById("statusMsg");
+
+    msg.className = "msg";
+    msg.textContent = "";
+
+    // Collect + validate
+    const data = {};
+    for (const f of fields) {
+      const val = parseFloat(document.getElementById(f).value);
+      if (isNaN(val)) {
+        msg.className = "msg error";
+        msg.textContent = `Please enter a valid value for ${f.charAt(0).toUpperCase() + f.slice(1)}.`;
+        return;
+      }
+      data[f] = val;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    msg.className = "msg loading";
+    msg.textContent = "Saving your measurements to Firestore…";
+
+    const result = await window.saveMeasurements(username, data);
+
+    if (result.ok) {
+      msg.className = "msg success";
+      msg.textContent = "Measurements saved! Redirecting to your profile…";
+      setTimeout(() => window.location.href = "profile.html", 1400);
+    } else {
+      msg.className = "msg error";
+      msg.textContent = result.error;
+      btn.disabled = false;
+      btn.textContent = "Save Measurements";
+    }
+  };
+</script>
+
+</body>
+</html>

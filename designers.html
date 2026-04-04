@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Designers | Sui Dhaga</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.filter-box {
+  background: #ffffff;
+  padding: 30px;
+  margin-bottom: 60px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+.filter-box select,
+.filter-box input {
+  padding: 10px;
+  margin: 10px 15px 10px 0;
+  border: 1px solid #ddd;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 4px;
+}
+.filter-box button {
+  background-color: #7b1e1e;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 4px;
+}
+.filter-box button:hover { background-color: #f3c97a; color: #102542; }
+.designer-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+}
+.designer-card {
+  background: #ffffff;
+  width: 300px;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+  transition: 0.3s;
+}
+.designer-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px rgba(0,0,0,0.12); }
+.designer-card h3 { font-family: 'Playfair Display', serif; margin-bottom: 10px; }
+.meta { font-size: 14px; color: #555; line-height: 1.6; }
+.no-result { text-align: center; font-weight: 500; margin-top: 40px; color: #888; }
+.chat-btn {
+  background: #7b1e1e;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: 0.3s;
+  border-radius: 4px;
+}
+.chat-btn:hover { background: #f3c97a; color: #102542; }
+
+/* Loading skeletons */
+.skeleton-card {
+  background: #fff;
+  width: 300px;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.06);
+}
+.skeleton {
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.source-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.source-badge.firestore { background: #e8f5e9; color: #2e7d32; }
+.source-badge.local     { background: #fff3e0; color: #e65100; }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">SUI DHAGA</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="couture.html">Couture</a>
+    <a href="stitch.html">Customise</a>
+    <a href="designers.html">Designers</a>
+    <a href="profile.html">Profile</a>
+    <a href="login.html">Logout</a>
+  </nav>
+</header>
+
+<section class="collection">
+  <h2>Filter Designers</h2>
+
+  <div class="filter-box">
+    Category:
+    <select id="filterCategory">
+      <option value="">All</option>
+      <option value="10k-30k">₹10k–₹30k</option>
+      <option value="30k-70k">₹30k–₹70k</option>
+      <option value="70k+">₹70k+</option>
+    </select>
+
+    Rating:
+    <select id="filterRating">
+      <option value="">All</option>
+      <option value="3">3+ ★</option>
+      <option value="4">4+ ★</option>
+      <option value="5">5 ★</option>
+    </select>
+
+    Sort:
+    <select id="sortOrder">
+      <option value="">None</option>
+      <option value="price_asc">Price Low → High</option>
+      <option value="price_desc">Price High → Low</option>
+      <option value="rating_desc">Rating High → Low</option>
+    </select>
+
+    <button onclick="applyFilters()">Apply Filters</button>
+  </div>
+
+  <div class="designer-grid" id="designerGrid">
+    <!-- Skeleton loaders -->
+    <div class="skeleton-card"><div class="skeleton" style="height:22px;width:60%"></div><div class="skeleton" style="height:14px;width:80%"></div><div class="skeleton" style="height:14px;width:50%"></div></div>
+    <div class="skeleton-card"><div class="skeleton" style="height:22px;width:60%"></div><div class="skeleton" style="height:14px;width:80%"></div><div class="skeleton" style="height:14px;width:50%"></div></div>
+    <div class="skeleton-card"><div class="skeleton" style="height:22px;width:60%"></div><div class="skeleton" style="height:14px;width:80%"></div><div class="skeleton" style="height:14px;width:50%"></div></div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Sui Dhaga. Crafted in India.</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+
+<script>
+  // ── Fallback data (used when Firestore designers collection is empty) ──
+  const LOCAL_DESIGNERS = [
+    { name: "Manyavar",                    category: "10k-30k", price: 12000,  rating: 4, specialty: "Ethnic Wear",    location: "Pan India" },
+    { name: "Anita Dongre",                category: "10k-30k", price: 15000,  rating: 4, specialty: "Bridal Fusion",  location: "Mumbai" },
+    { name: "Sarah & Sandeep",             category: "10k-30k", price: 18000,  rating: 3, specialty: "Contemporary",   location: "Delhi" },
+    { name: "Raymond Ethnix",              category: "10k-30k", price: 10000,  rating: 4, specialty: "Classic Kurtas", location: "Pan India" },
+    { name: "Independent Bespoke Studios", category: "10k-30k", price: 15000,  rating: 3, specialty: "Bespoke",        location: "Bangalore" },
+    { name: "Sabyasachi Menswear",         category: "30k-70k", price: 45000,  rating: 5, specialty: "Couture",        location: "Kolkata" },
+    { name: "Rahul Mishra Menswear",       category: "30k-70k", price: 40000,  rating: 5, specialty: "Luxury",         location: "Delhi" },
+    { name: "Abhishek Gupta",              category: "30k-70k", price: 35000,  rating: 4, specialty: "Indo-Western",   location: "Mumbai" }
+  ];
+
+  let allDesigners = [];
+  let dataSource   = "local"; // "firestore" or "local"
+
+  function formatPrice(n) {
+    return Number(n).toLocaleString("en-IN");
+  }
+
+  // ── Designer name → Firestore username mapping ────────────────
+  // Must match the usernames created by seed_designers.html
+  const DESIGNER_USERNAMES = {
+    "Manyavar":                    "manyavar",
+    "Anita Dongre":                "anita_dongre",
+    "Sarah & Sandeep":             "sarah_sandeep",
+    "Raymond Ethnix":              "raymond_ethnix",
+    "Independent Bespoke Studios": "independent_bespoke",
+    "Sabyasachi Menswear":         "sabyasachi_menswear",
+    "Rahul Mishra Menswear":       "rahul_mishra",
+    "Abhishek Gupta":              "abhishek_gupta"
+  };
+
+  function renderCards(list) {
+    const grid = document.getElementById("designerGrid");
+    if (!list || list.length === 0) {
+      grid.innerHTML = "<div class='no-result'>No designers found matching your filters.</div>";
+      return;
+    }
+
+    grid.innerHTML = list.map(d => {
+      // Support both Firestore schema (name, specialty, experience, location, rating)
+      // and local schema (name, category, price, rating, specialty, location)
+      const name      = d.name      || "Unknown Designer";
+      const specialty = d.specialty || "—";
+      const location  = d.location  || "India";
+      const rating    = d.rating    || "—";
+      const price     = d.price     ? "₹" + formatPrice(d.price) : (d.experience ? d.experience + " yrs exp." : "—");
+      const category  = d.category  || "";
+      const badge     = dataSource === "firestore"
+        ? `<div class='source-badge firestore'>● Live from Firestore</div>`
+        : `<div class='source-badge local'>● Local data</div>`;
+
+      // Resolve to the real Firestore username
+      const designerUser = d.username || DESIGNER_USERNAMES[name] || name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
+      const chatPrice = d.price || 12000;
+      const chatUrl = `chat_designer.html?designer=${encodeURIComponent(name)}&designerUser=${encodeURIComponent(designerUser)}&price=${chatPrice}`;
+
+      return `
+        <div class="designer-card">
+          ${badge}
+          <h3>${name}</h3>
+          <div class="meta">
+            Specialty: ${specialty}<br>
+            Location: ${location}<br>
+            ${category ? "Budget: " + category + "<br>" : ""}
+            Starting Price: ${price}<br>
+            Rating: ${"★".repeat(Math.round(rating))} (${rating})
+          </div>
+          <br>
+          <button class="chat-btn" onclick="window.location.href='${chatUrl}'">
+            Chat with Designer
+          </button>
+        </div>
+      `;
+    }).join("");
+  }
+
+  window.applyFilters = function () {
+    const cat  = document.getElementById("filterCategory").value;
+    const rat  = parseInt(document.getElementById("filterRating").value) || 0;
+    const sort = document.getElementById("sortOrder").value;
+
+    let filtered = allDesigners.filter(d => {
+      if (cat && d.category !== cat) return false;
+      if (rat && (d.rating || 0) < rat) return false;
+      return true;
+    });
+
+    if (sort === "price_asc")   filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+    if (sort === "price_desc")  filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+    if (sort === "rating_desc") filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
+    renderCards(filtered);
+  };
+
+  // ── Load from Firestore, fallback to local ──
+  async function loadDesigners() {
+    const firestoreData = await window.getDesigners();
+
+    if (firestoreData && firestoreData.length > 0) {
+      // Also filter firestored designers to 8 to match if they have more
+      allDesigners = firestoreData.slice(0, 8);
+      dataSource   = "firestore";
+    } else {
+      // Firestore collection is empty — use local hardcoded data
+      allDesigners = LOCAL_DESIGNERS;
+      dataSource   = "local";
+    }
+
+    renderCards(allDesigners);
+  }
+
+  loadDesigners();
+</script>
+
+</body>
+</html>

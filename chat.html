@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chat | Sui Dhaga</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.chat-container {
+  max-width: 800px;
+  margin: 100px auto;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+}
+.chat-container h2 { font-family: 'Playfair Display', serif; margin-bottom: 25px; }
+.chat-box {
+  height: 350px;
+  border: 1px solid #ddd;
+  padding: 20px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  background-color: #f7f4ef;
+}
+.message { margin-bottom: 12px; }
+.user { text-align: right; color: #7b1e1e; }
+.tailor { text-align: left; color: #102542; }
+.chat-input { display: flex; }
+.chat-input input { flex: 1; padding: 12px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif; }
+.chat-input button {
+  padding: 12px 25px;
+  background-color: #7b1e1e;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+}
+.chat-input button:hover { background-color: #f3c97a; color: #102542; }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">SUI DHAGA</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="couture.html">Couture</a>
+    <a href="stitch.html">Customise</a>
+    <a href="designers.html">Designers</a>
+    <a href="profile.html">Profile</a>
+    <a href="login.html">Logout</a>
+  </nav>
+</header>
+
+<div class="chat-container">
+  <h2 id="chatTitle">Chat with Tailor</h2>
+
+  <div class="chat-box" id="chatBox">
+    <div class="message tailor" id="welcomeMsg">Tailor: Welcome to Sui Dhaga. How may I assist you?</div>
+  </div>
+
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 Sui Dhaga. Crafted in India.</p>
+</footer>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const tailor = params.get('tailor') || 'Tailor';
+document.getElementById('chatTitle').textContent = 'Chat with ' + tailor;
+document.getElementById('welcomeMsg').textContent = tailor + ': Welcome to Sui Dhaga. How may I assist you?';
+
+function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const message = input.value.trim();
+  if (!message) return;
+
+  const chatBox = document.getElementById('chatBox');
+
+  const userMsg = document.createElement('div');
+  userMsg.classList.add('message', 'user');
+  userMsg.textContent = 'You: ' + message;
+  chatBox.appendChild(userMsg);
+
+  input.value = '';
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  setTimeout(() => {
+    const reply = document.createElement('div');
+    reply.classList.add('message', 'tailor');
+    reply.textContent = tailor + ': Thank you. We will respond shortly.';
+    chatBox.appendChild(reply);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 1000);
+}
+
+document.getElementById('messageInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') sendMessage();
+});
+</script>
+
+</body>
+</html>
