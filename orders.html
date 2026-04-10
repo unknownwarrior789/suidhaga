@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Order History | Sui Dhaga</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background-color:#f7f4ef;margin:0;color:#1c1c1c;}
+
+.navbar{background-color:#7b1e1e;padding:20px 80px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.logo{font-family:'Playfair Display',serif;font-size:28px;color:#f3c97a;font-weight:700;}
+nav a{color:white;text-decoration:none;margin-left:35px;font-size:14px;transition:0.3s;}
+nav a:hover{color:#f3c97a;}
+
+.orders-wrapper{max-width:1200px;margin:60px auto;padding:0 60px;}
+.orders-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;}
+.orders-header h1{font-family:'Playfair Display',serif;font-size:42px;margin:0;}
+.search-box{padding:11px 18px;border-radius:30px;border:1px solid #ddd;width:220px;background:white;font-family:'Poppins',sans-serif;font-size:13px;outline:none;}
+.search-box:focus{border-color:#7b1e1e;}
+
+.filter-bar{margin-bottom:24px;display:flex;flex-wrap:wrap;gap:8px;}
+.filter-btn{padding:9px 20px;border:none;border-radius:25px;background:#eee;cursor:pointer;transition:0.3s;font-family:'Poppins',sans-serif;font-size:13px;}
+.filter-btn.active,.filter-btn:hover{background:#7b1e1e;color:white;}
+
+.new-order-banner{background:linear-gradient(135deg,#3d0f0f,#7b1e1e);color:white;border-radius:12px;padding:18px 24px;margin-bottom:28px;display:flex;align-items:center;gap:16px;animation:slideDown 0.4s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.banner-icon{width:40px;height:40px;background:rgba(243,201,122,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.banner-text{flex:1;}
+.banner-text strong{display:block;font-size:15px;color:#f3c97a;margin-bottom:2px;}
+.banner-text span{font-size:12px;opacity:0.85;}
+.banner-close{background:none;border:none;color:rgba(255,255,255,0.6);font-size:18px;cursor:pointer;padding:4px;}
+.banner-close:hover{color:white;}
+
+.table-card{background:white;border-radius:12px;box-shadow:0 15px 30px rgba(0,0,0,0.08);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{background:#7b1e1e;color:white;padding:16px 18px;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;text-align:left;}
+td{padding:16px 18px;border-bottom:1px solid #f0ece6;font-size:13px;vertical-align:middle;}
+tbody tr:hover{background:#fafaf8;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr.highlight-new{animation:rowHighlight 2.5s ease forwards;}
+@keyframes rowHighlight{0%{background:#fff8ec}70%{background:#fff8ec}100%{background:transparent}}
+
+.status-pill{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;}
+.pill-pending{background:#fff3cd;color:#7a4f00;}
+.pill-processing{background:#d1ecf1;color:#0c5460;}
+.pill-stitching{background:#e8d5f5;color:#5a0080;}
+.pill-quality{background:#fde8d8;color:#7a3000;}
+.pill-delivery{background:#d4f0ff;color:#004d80;}
+.pill-completed{background:#d4edda;color:#155724;}
+
+.action-btn{padding:8px 14px;border:none;background:#7b1e1e;color:white;cursor:pointer;font-size:12px;border-radius:5px;margin-right:5px;font-family:'Poppins',sans-serif;transition:0.2s;white-space:nowrap;}
+.action-btn:hover{background:#f3c97a;color:#1c1c1c;}
+.action-btn.ghost{background:transparent;color:#7b1e1e;border:1px solid #7b1e1e;}
+.action-btn.ghost:hover{background:#7b1e1e;color:white;}
+
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#27ae60;font-weight:600;letter-spacing:0.3px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#27ae60;animation:livePulse 1.4s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
+
+.empty-state{text-align:center;padding:80px 20px;color:#999;}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:22px;color:#555;margin-bottom:8px;}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:200;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:white;padding:32px;border-radius:16px;width:500px;max-width:94vw;box-shadow:0 24px 60px rgba(0,0,0,0.2);animation:modalIn 0.3s ease;max-height:90vh;overflow-y:auto;}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.modal-close{float:right;cursor:pointer;font-size:22px;color:#999;background:none;border:none;line-height:1;}
+.modal-close:hover{color:#333;}
+.modal-title{font-family:'Playfair Display',serif;font-size:24px;margin:0 0 4px;}
+.modal-sub{font-size:12px;color:#aaa;margin-bottom:20px;}
+
+.detail-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0ece6;font-size:13px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-row span:first-child{color:#888;}
+.detail-row span:last-child{font-weight:500;text-align:right;}
+
+.track-steps{display:flex;justify-content:space-between;position:relative;margin:28px 0 10px;}
+.track-steps::before{content:'';position:absolute;top:13px;left:0;right:0;height:3px;background:#eee;z-index:0;}
+.track-progress-line{position:absolute;top:13px;left:0;height:3px;background:#7b1e1e;z-index:1;transition:width 0.7s ease;}
+.track-step{display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;flex:1;}
+.track-dot{width:26px;height:26px;border-radius:50%;border:3px solid #ddd;background:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;transition:0.3s;}
+.track-dot.done{background:#7b1e1e;border-color:#7b1e1e;color:white;}
+.track-dot.active{background:white;border-color:#7b1e1e;color:#7b1e1e;}
+.track-label{font-size:9px;text-align:center;margin-top:7px;color:#aaa;max-width:60px;line-height:1.3;}
+.track-label.done,.track-label.active{color:#7b1e1e;font-weight:600;}
+.track-current{text-align:center;font-size:13px;color:#555;margin-top:10px;}
+.track-current strong{color:#7b1e1e;}
+
+.eta-bar{background:#f5f0e8;border-radius:10px;padding:14px 18px;margin-top:18px;display:flex;align-items:center;gap:12px;font-size:12px;color:#7a7368;}
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">SUI DHAGA</div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="designers.html">Designers</a>
+    <a href="profile.html">Dashboard</a>
+    <a href="#">Logout</a>
+  </nav>
+</header>
+
+<section class="orders-wrapper">
+
+  <div class="orders-header">
+    <div>
+      <h1>My Orders</h1>
+      <div class="live-badge" id="liveBadge" style="display:none;margin-top:6px;">
+        <span class="live-dot"></span> Live updates active
+      </div>
+    </div>
+    <input type="text" id="search" class="search-box" placeholder="Search orders…">
+  </div>
+
+  <div class="new-order-banner" id="newOrderBanner" style="display:none;">
+    <div class="banner-icon">
+      <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M4 10l5 5 8-9" stroke="#f3c97a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="banner-text">
+      <strong id="bannerText">Order placed successfully!</strong>
+      <span>Payment confirmed · Your designer has been notified and will begin shortly</span>
+    </div>
+    <button class="banner-close" onclick="this.parentElement.style.display='none'">✕</button>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+    <button class="filter-btn" onclick="setFilter('processing',this)">Processing</button>
+    <button class="filter-btn" onclick="setFilter('stitching',this)">Stitching</button>
+    <button class="filter-btn" onclick="setFilter('delivery',this)">Out for Delivery</button>
+    <button class="filter-btn" onclick="setFilter('completed',this)">Completed</button>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th><th>Designer</th><th>Outfit</th>
+          <th>Status</th><th>Date</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ordersBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <h3>No orders found</h3>
+      <p style="font-size:13px;">Try a different filter or place a new order through the designer studio.</p>
+    </div>
+  </div>
+</section>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+    <div class="modal-title" id="vmTitle"></div>
+    <div class="modal-sub" id="vmSub"></div>
+    <div id="vmBody"></div>
+  </div>
+</div>
+
+<!-- TRACK MODAL -->
+<div class="modal-overlay" id="trackModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('trackModal')">✕</button>
+    <div class="modal-title">Order Tracking</div>
+    <div class="modal-sub" id="tmSub"></div>
+    <div id="tmBody"></div>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  {key:'pending',    label:'Order\nPlaced'},
+  {key:'processing', label:'Designer\nConfirmed'},
+  {key:'stitching',  label:'Stitching'},
+  {key:'quality',    label:'Quality\nCheck'},
+  {key:'delivery',   label:'Out for\nDelivery'},
+  {key:'completed',  label:'Delivered'}
+];
+
+const STATUS_LABELS = {
+  pending:'Pending', processing:'Processing', stitching:'Stitching',
+  quality:'Quality Check', delivery:'Out for Delivery', completed:'Completed'
+};
+const STATUS_PILL = {
+  pending:'pill-pending', processing:'pill-processing', stitching:'pill-stitching',
+  quality:'pill-quality', delivery:'pill-delivery', completed:'pill-completed'
+};
+
+const SEED = [
+  {id:'SD-101',designer:'Manyavar',outfit:'Kurta Set',fabric:'Cotton',color:'Ivory',status:'completed',statusStep:5,date:'12 Mar 2026',total:14160,estimatedDelivery:'5 Apr 2026',placedAt:0},
+  {id:'SD-102',designer:'Anita Dongre',outfit:'Indo Western',fabric:'Silk Blend',color:'Navy',status:'delivery',statusStep:4,date:'18 Mar 2026',total:20650,estimatedDelivery:'12 Apr 2026',placedAt:0},
+  {id:'SD-103',designer:'Sabyasachi',outfit:'Sherwani',fabric:'Raw Silk',color:'Maroon',status:'stitching',statusStep:2,date:'28 Mar 2026',total:53100,estimatedDelivery:'20 Apr 2026',placedAt:0}
+];
+
+let allOrders = [];
+let activeFilter = 'all';
+let currentTrackId = null;
+
+function init() {
+  let saved = [];
+  try { saved = JSON.parse(sessionStorage.getItem('sd_orders') || '[]'); } catch(e){}
+  const savedIds = new Set(saved.map(o => o.id));
+  allOrders = [...saved, ...SEED.filter(o => !savedIds.has(o.id))];
+
+  const latest = sessionStorage.getItem('sd_latest_order');
+  if (latest) {
+    document.getElementById('bannerText').textContent = 'Order #' + latest + ' placed & payment confirmed!';
+    document.getElementById('newOrderBanner').style.display = 'flex';
+    document.getElementById('liveBadge').style.display = 'flex';
+    sessionStorage.removeItem('sd_latest_order');
+  }
+
+  render();
+  startLive();
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const list = allOrders.filter(o => {
+    if (activeFilter !== 'all' && o.status !== activeFilter) return false;
+    if (q && ![o.id,o.designer,o.outfit,o.status].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('emptyState').style.display = list.length ? 'none' : 'block';
+
+  document.getElementById('ordersBody').innerHTML = list.map(o => {
+    const isNew = Date.now() - (o.placedAt || 0) < 15000;
+    return `<tr data-id="${o.id}" class="${isNew?'highlight-new':''}">
+      <td style="font-family:monospace;font-weight:700;color:#7b1e1e;">${o.id}</td>
+      <td>${o.designer}</td>
+      <td>${o.outfit}</td>
+      <td>
+        <div id="sc-${o.id}">
+          <span class="status-pill ${STATUS_PILL[o.status]||'pill-pending'}">${STATUS_LABELS[o.status]||o.status}</span>
+          ${o.status!=='completed'?`<div class="live-badge" style="margin-top:5px;"><span class="live-dot"></span>live</div>`:''}
+        </div>
+      </td>
+      <td style="color:#888;">${o.date}</td>
+      <td>
+        <button class="action-btn" onclick="openView('${o.id}')">View</button>
+        <button class="action-btn ghost" onclick="openTrack('${o.id}')">Track</button>
+        ${o.status==='completed'?`<button class="action-btn ghost">Reorder</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function setFilter(s, btn) {
+  activeFilter = s;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+document.getElementById('search').addEventListener('input', render);
+
+// ── LIVE PROGRESSION ──────────────────────────────────────────────
+function startLive() {
+  allOrders.forEach(o => {
+    if (o.status === 'completed') return;
+    const age = Date.now() - (o.placedAt || 0);
+    if (age > 180000) return; // only animate orders < 3 mins old
+
+    const iv = setInterval(() => {
+      const order = allOrders.find(x => x.id === o.id);
+      if (!order || order.status === 'completed') { clearInterval(iv); return; }
+      const next = order.statusStep + 1;
+      if (next >= STEPS.length) { clearInterval(iv); return; }
+
+      order.statusStep = next;
+      order.status = STEPS[next].key;
+
+      // persist
+      try {
+        const s = JSON.parse(sessionStorage.getItem('sd_orders') || '[]');
+        const i = s.findIndex(x => x.id === order.id);
+        if (i >= 0) { s[i].status = order.status; s[i].statusStep = next; }
+        sessionStorage.setItem('sd_orders', JSON.stringify(s));
+      } catch(e){}
+
+      // update status cell
+      const sc = document.getElementById('sc-' + order.id);
+      if (sc) {
+        sc.innerHTML = `<span class="status-pill ${STATUS_PILL[order.status]||'pill-pending'}">${STATUS_LABELS[order.status]}</span>
+          ${order.status!=='completed'?`<div class="live-badge" style="margin-top:5px;"><span class="live-dot"></span>live</div>`:''}`;
+        const row = sc.closest('tr');
+        if (row) { row.style.background='#fff8ec'; setTimeout(()=>{row.style.background='';},1400); }
+      }
+
+      // refresh track modal if open for this order
+      if (currentTrackId === order.id && document.getElementById('trackModal').classList.contains('open')) {
+        renderTrack(order);
+      }
+    }, 12000); // advance every 12s for demo
+  });
+}
+
+// ── MODALS ────────────────────────────────────────────────────────
+function openView(id) {
+  const o = allOrders.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('vmTitle').textContent = 'Order #' + o.id;
+  document.getElementById('vmSub').textContent = 'Placed ' + o.date + ' · ' + o.designer;
+  const gst = o.total ? Math.round((o.total/1.18)*0.18) : 0;
+  const base = o.total ? o.total - gst : 0;
+  document.getElementById('vmBody').innerHTML = `
+    <div class="detail-row"><span>Outfit</span><span>${o.outfit}</span></div>
+    <div class="detail-row"><span>Fabric</span><span>${o.fabric||'—'}</span></div>
+    <div class="detail-row"><span>Color</span><span>${o.color||'—'}</span></div>
+    <div class="detail-row"><span>Designer</span><span>${o.designer}</span></div>
+    <div class="detail-row"><span>Status</span><span><span class="status-pill ${STATUS_PILL[o.status]||'pill-pending'}">${STATUS_LABELS[o.status]}</span></span></div>
+    <div class="detail-row"><span>Base Price</span><span>₹${base.toLocaleString('en-IN')}</span></div>
+    <div class="detail-row"><span>GST (18%)</span><span>₹${gst.toLocaleString('en-IN')}</span></div>
+    <div class="detail-row"><span>Total Paid</span><span style="color:#7b1e1e;font-size:15px;">₹${(o.total||0).toLocaleString('en-IN')}</span></div>
+    <div class="detail-row"><span>Est. Delivery</span><span>${o.estimatedDelivery||'—'}</span></div>
+    <div style="margin-top:18px;">
+      <button class="action-btn" onclick="closeModal('viewModal');openTrack('${o.id}')">Track This Order →</button>
+    </div>`;
+  document.getElementById('viewModal').classList.add('open');
+}
+
+function openTrack(id) {
+  const o = allOrders.find(x => x.id === id);
+  if (!o) return;
+  currentTrackId = id;
+  document.getElementById('tmSub').textContent = '#' + o.id + ' · ' + o.designer + ' · ' + o.outfit;
+  renderTrack(o);
+  document.getElementById('trackModal').classList.add('open');
+}
+
+function renderTrack(o) {
+  const step = o.statusStep || 0;
+  const pct = step === 0 ? 0 : Math.round((step / (STEPS.length - 1)) * 100);
+
+  const dots = STEPS.map((s,i) => {
+    const cls = i < step ? 'done' : i === step ? 'active' : '';
+    const lbl = s.label.replace('\n','<br>');
+    return `<div class="track-step">
+      <div class="track-dot ${cls}">${i < step ? '✓' : i+1}</div>
+      <div class="track-label ${cls}">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  const daysLeft = o.estimatedDelivery && o.status !== 'completed'
+    ? Math.max(0, Math.ceil((new Date(o.estimatedDelivery) - Date.now()) / 86400000)) : 0;
+
+  document.getElementById('tmBody').innerHTML = `
+    <div class="track-steps">
+      ${dots}
+      <div class="track-progress-line" id="tpl" style="width:0%"></div>
+    </div>
+    <div class="track-current">
+      Current step: <strong>${STATUS_LABELS[o.status]||o.status}</strong>
+      ${o.status!=='completed'?`<span class="live-badge" style="margin-left:8px;"><span class="live-dot"></span>tracking live</span>`:''}
+    </div>
+    ${o.status !== 'completed'
+      ? `<div class="eta-bar">
+          <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="#7b1e1e" stroke-width="1.2"/><path d="M8 5v3.5l2.5 1.5" stroke="#7b1e1e" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Est. delivery: <strong style="color:#1c1c1c;margin:0 4px;">${o.estimatedDelivery||'TBD'}</strong>
+          ${daysLeft > 0 ? `· <span style="color:#7b1e1e;font-weight:600;">${daysLeft} days left</span>` : ''}
+        </div>`
+      : `<div class="eta-bar" style="background:#f0fff4;border:1px solid #b8e6c8;">
+          <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="#27ae60" stroke-width="1.2"/><path d="M5 8l2.5 2.5 4-4" stroke="#27ae60" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="color:#155724;font-weight:500;">Delivered · ${o.estimatedDelivery||''}</span>
+        </div>`}
+  `;
+
+  setTimeout(() => {
+    const line = document.getElementById('tpl');
+    if (line) line.style.width = pct + '%';
+  }, 60);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'trackModal') currentTrackId = null;
+}
+
+['viewModal','trackModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === document.getElementById(id)) closeModal(id);
+  });
+});
+
+init();
+</script>
+</body>
+</html>
